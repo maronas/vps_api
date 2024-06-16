@@ -1,0 +1,63 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body{
+    background: #222;
+    width: 100vw;
+    min-height: 100dvh;
+    overflow: auto;
+}
+
+/*Bendri nustatymai pagrindiniams container'iams */
+
+header, .content, footer{
+    align-self: center;
+    text-align: center;
+    min-width: 70dvw;
+    max-width: 1200px;
+}
+
+header, footer{
+    height: 5rem;
+    color: #fff;
+}
+
+.content {
+    flex: 1;
+    padding: 10px;
+    background-color: #444;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    align-content: flex-start;
+    justify-content: center;
+}
+
+.form__authorisation{
+    max-width: 30rem;
+}
+
+.logo__link{
+    color: white;
+}
+
+.logo__link:hover{
+    color: #ffe532;
+}
+
+.auth__link{
+    color: #ffe532;
+    font-weight: bold;
+}
+
+.auth__link:hover{
+    color: #838383;
+    font-weight: bolder;
+}
+
+.companyInput{
+    display: none;
+}

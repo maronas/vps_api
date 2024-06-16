@@ -1,0 +1,42 @@
+version: "3.1"
+services:
+  www:
+    build: .
+    ports:
+      - "8001:80"
+      - "8002:88"
+    volumes:
+      - ./www:/var/www/html/
+      - ./src:/var/www/html2/
+      - ./conf/apache2/sites-enabled:/etc/apache2/sites-enabled/
+      - ./conf/apache2/ports.conf:/etc/apache2/ports.conf
+      - ./vendor:/var/www/html/vendor
+    links:
+      - db
+    networks:
+      - default
+  db:
+    image: mariadb:10.5
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: time4vps_orders
+      MYSQL_USER: interneto_vizija
+      MYSQL_PASSWORD: slaptazodis
+      MYSQL_ROOT_PASSWORD: slaptazodisroot
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+      - ./conf:/etc/mysql/conf.d
+      - persistent:/var/lib/mysql
+    networks:
+      - default
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - db:db
+    ports:
+      - 8000:80
+    environment:
+      PMA_HOST: db
+volumes:
+  persistent:
