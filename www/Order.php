@@ -117,19 +117,43 @@ class Order
         while ($field = $meta->fetch_field()) {
             $params[] = &$row[$field->name];
         }
+        $results_history = [];
+
+
         call_user_func_array(array($stmt, 'bind_result'), $params);
         while ($stmt->fetch()) {
-            echo "<tr>";
-            $response = $api->orderHistory($row['product_id'], $row['order_id']);
-            echo "<td>" . $row['service_type'] . "</td>";
-            echo "<td>";
-            print_r($response['config']);
-            echo "</td>";
-            echo "<td>" . $response['date_created'] . "</td>";
-            echo "</tr>";
+            if(array_key_exists($row['product_id'], $results_history)){
+                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+            }else{
+                $response_config = $api->orderHistory($row['product_id'], $row['order_id']);
+                $results_history += [
+                    $row['product_id'] => $response_config['config'],
+                ];
+                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+            }
+//            Senas budas
+//
+//            echo "<tr>";
+//            $response = $api->orderHistory($row['product_id'], $row['order_id']);
+//            echo "<td>" . $row['service_type'] . "</td>";
+//            echo "<td>";
+//            echo $response['config'];
+//            echo "</td>";
+//            echo "<td>" . $api->orderHistoryDateCreated($row['order_id']) . "</td>";
+//            echo "</tr>";
         }
         $stmt->free_result();
         $stmt->close();
+    }
+
+    function orderHistoryDisplayRow($type, $config, $date){
+        echo "<tr>";
+        echo "<td>" . $type . "</td>";
+        echo "<td>";
+        echo $config;
+        echo "</td>";
+        echo "<td>" . $date . "</td>";
+        echo "</tr>";
     }
 
     function displayInfo($string): void

@@ -158,15 +158,26 @@ class Api
     function orderHistory($product_id, $order_id)
     {
         try{
-            $response_info = $this->getAuthHttpClient()->get('service/' . $order_id);
-            $order_info = json_decode($response_info->getBody()->getContents(), true);
             $response = $this->fetchProductInfo($product_id);
             $config = $response['product']['description'];
             $data_set = [
-                'date_created' => $order_info['service']['date_created'],
                 'config' => $config,
             ];
             return $data_set;
+        } catch (ClientException $e) {
+            return 'Client Error: ' . $e->getMessage();
+        } catch (RequestException $e) {
+            return 'Request Error: ' . $e->getMessage();
+        } catch (Exception $e) {
+            return 'General Error: ' . $e->getMessage();
+        }
+    }
+
+    function orderHistoryDateCreated($order_id){
+        try{
+            $response_info = $this->getAuthHttpClient()->get('service/' . $order_id);
+            $order_info = json_decode($response_info->getBody()->getContents(), true);
+            return $order_info['service']['date_created'];
         } catch (ClientException $e) {
             return 'Client Error: ' . $e->getMessage();
         } catch (RequestException $e) {
