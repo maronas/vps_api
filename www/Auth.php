@@ -3,7 +3,6 @@
 use GuzzleHttp\Exception\ClientException;
 
 require_once('Api.php');
-require_once('DbSingleton.php');
 require_once('PDOSingleton.php');
 
 class Auth
@@ -61,22 +60,22 @@ class Auth
                     $this->displayError($error_email_format);
                     exit();
                 }
-                $stmt = DbSingleton::getConnection()
+                $stmt = PDOSingleton::getConnection()
                     ->prepare("SELECT * FROM `users` WHERE email = '$email'");
-                $stmt->execute();
-                if ($stmt->get_result()->num_rows > 0) {
+                if (!$stmt->execute()) {
                     $this->displayError($error_email_exists);
+                }else{
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = PDOSingleton::getConnection()->prepare("INSERT INTO users (email, password) VALUES (?, ?)");
+                    $stmt->bindParam("1", $email);
+                    $stmt->bindParam("2", $hashedPassword);
+                    if ($stmt->execute()) {
+                        $this->displaySuccess($success);
+                    } else {
+                        $this->displayError("Registration failed, error code: " . $stmt->errorCode());
+                    }
+                    unset($_SESSION['token']);
                 }
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = DbSingleton::getConnection()->prepare("INSERT INTO users (email, password) VALUES (?, ?)");
-                $stmt->bind_param("ss", $email, $hashedPassword);
-                if ($stmt->execute()) {
-                    $this->displaySuccess($success);
-                } else {
-                    $this->displayError("Registration failed: " . $stmt->error);
-                }
-                $stmt->close();
-                unset($_SESSION['token']);
             } elseif($signupresp['error'][0] === "useralreadyexistsemail_error"){
                 $this->displayError($error_email_exists);
             } else{
@@ -95,7 +94,6 @@ class Auth
             $stm->execute();
             $stm->setFetchMode(PDO::FETCH_ASSOC);
             $row = $stm->fetch();
-            print_r($row);
             if (isset($row)) {
                 $hashedPassword = $row['password'];
                 $user_id = $row['id'];

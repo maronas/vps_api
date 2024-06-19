@@ -1,7 +1,7 @@
 <?php
 
 require_once('Api.php');
-require_once('DbSingleton.php');
+require_once('PDOSingleton.php');
 
 class Order
 {
@@ -94,12 +94,11 @@ class Order
 
             $response = $api->orderProduct($data, $_POST['productid']);
             if (isset($response)) {
-                $stmt = DbSingleton::getConnection()->prepare("INSERT INTO `orders` (user_id ,order_number, order_id, invoice_id, product_id, service_type, service_name, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = PDOSingleton::getConnection()->prepare("INSERT INTO `orders` (user_id ,order_number, order_id, invoice_id, product_id, service_type, service_name, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $data_set = array($_SESSION['user_id'], $response['order_number'], $response['order_id'], $response['invoice_id'], $response['product_id'], $response['service_type'], $response['service_name'], $response['total_price']);
                 if ($stmt->execute($data_set)) {
                     $this->displayInfo($order_success);
                     unset($_SESSION['token']);
-                    $stmt->close();
                 } else {
                     $this->displayInfo($order_error);
                 }
@@ -110,18 +109,12 @@ class Order
     function fetchOrderHistory(): void
     {
         $api = new Api();
-        $stmt = DbSingleton::getConnection()->prepare("SELECT * FROM `orders` WHERE user_id = ?");
-        $stmt->bind_param("i", $_SESSION['user_id']);
+        $stmt = PDOSingleton::getConnection()->prepare("SELECT * FROM `orders` WHERE user_id = ?");
+        $stmt->bindParam(1, $_SESSION['user_id']);
         $stmt->execute();
-        $meta = $stmt->result_metadata();
-        while ($field = $meta->fetch_field()) {
-            $params[] = &$row[$field->name];
-        }
+        $stmt->setFetchMode(PDO::FETCH_ASSOC);
         $results_history = [];
-
-
-        call_user_func_array(array($stmt, 'bind_result'), $params);
-        while ($stmt->fetch()) {
+        while ($row = $stmt->fetch()) {
             if(array_key_exists($row['product_id'], $results_history)){
                 $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
             }else{
@@ -131,19 +124,7 @@ class Order
                 ];
                 $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
             }
-//            Senas budas
-//
-//            echo "<tr>";
-//            $response = $api->orderHistory($row['product_id'], $row['order_id']);
-//            echo "<td>" . $row['service_type'] . "</td>";
-//            echo "<td>";
-//            echo $response['config'];
-//            echo "</td>";
-//            echo "<td>" . $api->orderHistoryDateCreated($row['order_id']) . "</td>";
-//            echo "</tr>";
         }
-        $stmt->free_result();
-        $stmt->close();
     }
 
     function orderHistoryDisplayRow($type, $config, $date){
