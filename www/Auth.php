@@ -4,6 +4,7 @@ use GuzzleHttp\Exception\ClientException;
 
 require_once('Api.php');
 require_once('DbSingleton.php');
+require_once('PDOSingleton.php');
 
 class Auth
 {
@@ -89,13 +90,13 @@ class Auth
         if (isset($_POST['email']) && isset($_POST['password'])) {
             $email = $_POST['email'];
             $password = $_POST['password'];
-            $stmt = DbSingleton::getConnection()
-                ->prepare("SELECT password, id FROM `users` WHERE email = ?");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
+            $stm = PDOSingleton::getConnection()->prepare("SELECT password, id FROM `users` WHERE email = ?");
+            $stm->bindParam(1, $email);
+            $stm->execute();
+            $stm->setFetchMode(PDO::FETCH_ASSOC);
+            $row = $stm->fetch();
+            print_r($row);
+            if (isset($row)) {
                 $hashedPassword = $row['password'];
                 $user_id = $row['id'];
                 $_SESSION['user_id'] = $user_id;
@@ -108,8 +109,6 @@ class Auth
             } else {
                 $this->displayError("Nėra vartotojo su tokiu el-paštu...");
             }
-
-            $stmt->close();
         } else {
             $this->displayError("Užpildikite VISUS laukus!");
         }

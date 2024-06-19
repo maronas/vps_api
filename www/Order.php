@@ -95,8 +95,8 @@ class Order
             $response = $api->orderProduct($data, $_POST['productid']);
             if (isset($response)) {
                 $stmt = DbSingleton::getConnection()->prepare("INSERT INTO `orders` (user_id ,order_number, order_id, invoice_id, product_id, service_type, service_name, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("iiiiissd", $_SESSION['user_id'], $response['order_number'], $response['order_id'], $response['invoice_id'], $response['product_id'], $response['service_type'], $response['service_name'], $response['total_price']);
-                if ($stmt->execute()) {
+                $data_set = array($_SESSION['user_id'], $response['order_number'], $response['order_id'], $response['invoice_id'], $response['product_id'], $response['service_type'], $response['service_name'], $response['total_price']);
+                if ($stmt->execute($data_set)) {
                     $this->displayInfo($order_success);
                     unset($_SESSION['token']);
                     $stmt->close();

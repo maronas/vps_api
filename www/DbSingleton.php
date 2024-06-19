@@ -3,23 +3,21 @@
 class DbSingleton
 {
     private static ?DbSingleton $instance = null;
-    private mysqli $connection;
+//    private mysqli $connection;
 
-    private function __construct()
+    protected function __construct()
     {
         $servername = 'db';
         $username = 'interneto_vizija';
         $password = 'slaptazodis';
         $database = 'time4vps_orders';
-
         $this->connection = new mysqli($servername, $username, $password, $database);
-
         if ($this->connection->connect_error) {
             die("Connection failed: " . $this->connection->connect_error);
         }
     }
 
-    public static function getInstance(): self
+    public static function getInstance(): DbSingleton
     {
         if (self::$instance == null) {
             self::$instance = new DbSingleton();
