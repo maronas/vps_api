@@ -1,9 +1,8 @@
 <?php
 class PDOSingleton
 {
-
-//	protected static $instance;
     private static ?PDOSingleton $instance = null;
+    private PDO $connection;
 
     protected function __construct()
     {
@@ -23,7 +22,7 @@ class PDOSingleton
     public static function getInstance(): PDOSingleton
     {
         if (self::$instance == null) {
-            self::$instance = new PDOSingleton();
+            self::$instance = new self();
         }
 
         return self::$instance;

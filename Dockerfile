@@ -1,9 +1,14 @@
 FROM php:8.2-apache
+
 RUN a2enmod rewrite
-RUN docker-php-ext-install pdo pdo_mysql
-RUN apt-get update \
-    && apt-get install -y libzip-dev \
-    && apt-get install -y zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-install zip \
-    && docker-php-ext-install mysqli
+
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    zlib1g-dev \
+    && docker-php-ext-install pdo pdo_mysql zip mysqli
+
+# Install Redis extension
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+COPY . /var/www/html

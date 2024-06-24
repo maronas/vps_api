@@ -5,6 +5,7 @@
         "ext-curl": "*",
         "ext-apache": "*",
         "ext-mysqli": "*",
-      "ext-pdo": "*"
+      "ext-pdo": "*",
+        "ext-redis": "*"
     }
 }

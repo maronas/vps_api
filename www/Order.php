@@ -113,18 +113,45 @@ class Order
         $stmt->bindParam(1, $_SESSION['user_id']);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $results_history = [];
-        while ($row = $stmt->fetch()) {
-            if(array_key_exists($row['product_id'], $results_history)){
-                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
-            }else{
-                $response_config = $api->orderHistory($row['product_id'], $row['order_id']);
-                $results_history += [
-                    $row['product_id'] => $response_config['config'],
-                ];
-                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+        $redis = new Redis();
+        $redis->connect('redis_server', 6379);
+        try{
+            $redis_key = 'product_specifications';
+            if ($redis->exists($redis_key)) {
+                $results_history = json_decode($redis->get($redis_key), true);
+            } else {
+                $results_history = [];
             }
+            while ($row = $stmt->fetch()) {
+                if (array_key_exists($row['product_id'], $results_history)) {
+                    $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+                } else {
+                    // Fetch data from the API only if not already in Redis
+                    $response_config = $api->orderHistory($row['product_id'], $row['order_id']);
+                    $results_history[$row['product_id']] = $response_config['config'];
+
+                    // Update the Redis cache with the new specification
+                    $redis->set($redis_key, json_encode($results_history));
+                    $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+                }
+            }
+        }catch (Exception $e){
+            echo "Error: " . $e->getMessage();
         }
+//        BE REDISO
+//
+//        $results_history = [];
+//        while ($row = $stmt->fetch()) {
+//            if(array_key_exists($row['product_id'], $results_history)){
+//                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+//            }else{
+//                $response_config = $api->orderHistory($row['product_id'], $row['order_id']);
+//                $results_history += [
+//                    $row['product_id'] => $response_config['config'],
+//                ];
+//                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
+//            }
+//        }
     }
 
     function orderHistoryDisplayRow($type, $config, $date){
