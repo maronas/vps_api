@@ -106,11 +106,13 @@ class Order
         }
     }
 
-    function fetchOrderHistory(): void
+
+    function fetchOrderHistory($user_id): string
     {
+        $rows = '';
         $api = new Api();
         $stmt = PDOSingleton::getConnection()->prepare("SELECT * FROM `orders` WHERE user_id = ?");
-        $stmt->bindParam(1, $_SESSION['user_id']);
+        $stmt->bindParam(1, $user_id);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_ASSOC);
         $redis = new Redis();
@@ -121,12 +123,12 @@ class Order
             while ($row = $stmt->fetch()) {
                 if ($redis->exists($row['product_id'])) {
                     $spec = $redis->get($row['product_id']);
-                    $this->orderHistoryDisplayRow($row['service_type'], $spec, $api->orderHistoryDateCreated($row['order_id']));
+                    $rows .= $this->orderHistoryDisplayRow($row['service_type'], $spec, $api->orderHistoryDateCreated($row['order_id']));
                 } else {
                     $response_config = $api->orderHistory($row['product_id'], $row['order_id']);
                     $spec = $response_config['config'];
                     $redis->set($row['product_id'], $spec);
-                    $this->orderHistoryDisplayRow($row['service_type'], $spec, $api->orderHistoryDateCreated($row['order_id']));
+                    $rows .= $this->orderHistoryDisplayRow($row['service_type'], $spec, $api->orderHistoryDateCreated($row['order_id']));
                 }
             }
 
@@ -167,20 +169,21 @@ class Order
 //                $this->orderHistoryDisplayRow($row['service_type'], $results_history[$row['product_id']], $api->orderHistoryDateCreated($row['order_id']));
 //            }
 //        }
+
+            return $rows;
+
         } catch (Exception $e) {
-            echo "Error: " . $e;
+            return "Error: " . $e;
         }
     }
 
-    function orderHistoryDisplayRow($type, $config, $date)
+    function orderHistoryDisplayRow($type, $config, $date): string
     {
-        echo "<tr>";
-        echo "<td>" . $type . "</td>";
-        echo "<td>";
-        echo $config;
-        echo "</td>";
-        echo "<td>" . $date . "</td>";
-        echo "</tr>";
+        return "<tr>
+                    <td>{$type}</td>
+                    <td>{$config}</td>
+                    <td>{$date}</td>
+                </tr>";
     }
 
     function displayInfo($string): void

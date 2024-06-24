@@ -1,20 +1,11 @@
 <?php
 include_once('../Order.php');
-$order = new Order();
+
+$_SESSION['user_id'] = $_GET['user_id'];
+$_SESSION['credentials'] = $_GET['credentials'];
+
+if (isset($_GET['user_id'])){
+    $order = new Order();
+    echo $order->fetchOrderHistory($_GET['user_id']);
+}
 ?>
-<div class="table-responsive">
-    <table class="table table-striped table-dark">
-        <thead class="thead-dark">
-        <tr>
-            <th scope="col">Serverio tipas</th>
-            <th scope="col">Serverio konfigūracija</th>
-            <th scope="col">Užsakymo data</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php
-        $order->fetchOrderHistory();
-        ?>
-        </tbody>
-    </table>
-</div>
